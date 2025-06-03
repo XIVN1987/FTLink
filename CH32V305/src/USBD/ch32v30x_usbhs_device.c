@@ -150,13 +150,13 @@ void USBD_TxWrite(uint32_t ep, uint8_t * data, uint32_t size)
     if(ep == USB_BULK_IN_EP)
     {
         USBHSD->UEP1_TX_DMA = (uint32_t)data;
-        USBHSD->UEP1_TX_LEN = 0;
+        USBHSD->UEP1_TX_LEN = size;
 		USBHSD->UEP1_TX_CTRL = (USBHSD->UEP1_TX_CTRL & ~USBHS_UEP_T_RES_MASK) | USBHS_UEP_T_RES_ACK;
     }
     else if(ep == VCP_BULK_IN_EP)
     {
         USBHSD->UEP3_TX_DMA = (uint32_t)data;
-        USBHSD->UEP3_TX_LEN = 0;
+        USBHSD->UEP3_TX_LEN = size;
 		USBHSD->UEP3_TX_CTRL = (USBHSD->UEP3_TX_CTRL & ~USBHS_UEP_T_RES_MASK) | USBHS_UEP_T_RES_ACK;
     }
 }

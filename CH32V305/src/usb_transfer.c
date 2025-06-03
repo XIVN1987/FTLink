@@ -8,27 +8,13 @@
 #include "usb_transfer.h"
 
 
-extern uint32_t SysTick_ms;
-
-
-struct {
-	uint32_t timeout;
-	uint32_t latency;
-} ftdevs[2];
-
-
 uint8_t jtag_req_buf[USB_BULK_OUT_SZ_HS];
 uint8_t jtag_resp_buf[USB_BULK_IN_SZ_HS];
 volatile int jtag_req_size;
 volatile int jtag_resp_size;
 
-void USB_Init(void)
+void USBD_Config(void)
 {
-	ftdevs[0].timeout = 0;
-	ftdevs[0].latency = 16;
-	ftdevs[1].timeout = 0;
-	ftdevs[1].latency = 16;
-	
 	jtag_req_size = 0;
 	
 	jtag_resp_buf[0] = 0x02;
@@ -44,16 +30,12 @@ void USB_Out_callback(uint8_t data[], uint32_t nbytes)
 {
 	memcpy(jtag_req_buf, data, nbytes);
 	jtag_req_size = nbytes;
-
-	ftdevs[0].timeout = 0x7fffffff;
 }
 
 
 void USB_In_callback(void)
 {
 	jtag_resp_size = 2;
-	
-	ftdevs[0].timeout = SysTick_ms + ftdevs[0].latency;
 }
 
 
@@ -61,35 +43,12 @@ int JTAG_execute(uint8_t *req, int req_size);
 void JTAG_handle(void)
 {
 	if(jtag_req_size == 0)
-	{
-		if(ftdevs[0].timeout)
-		{
-			if(SysTick_ms >= ftdevs[0].timeout)
-			{
-				ftdevs[0].timeout = 0;
-				USBD_TxWrite(USB_BULK_IN_EP, jtag_resp_buf, jtag_resp_size);
-			}
-		}
-		
-		if(ftdevs[1].timeout)
-		{
-			if(SysTick_ms >= ftdevs[1].timeout)
-			{
-				ftdevs[1].timeout = 0;
-			}
-		}
-
 		return;
-	}
-		
 	
 	JTAG_execute(jtag_req_buf, jtag_req_size);
-
 	jtag_req_size = 0;
 
 	USBD_RxReady(USB_BULK_OUT_EP);
-
-	ftdevs[0].timeout = SysTick_ms + ftdevs[0].latency;
 }
 
 
@@ -157,13 +116,6 @@ void USB_VendorRequest(USB_SETUP_REQ * pSetup)
 	switch(pSetup->bRequest)
 	{
 	case VREQ_RESET:
-		if(pSetup->wValue == 0)
-		{
-			// RESET 命令后，FTDI驱动会重置ep的状态。ep将要发送的数据也被清除了。
-			// 但FTDI驱动接下来会读ep，如果读不到就卡死了。这里设置一个16ms的定时器，
-			// 到期后会发送数据给驱动。
-			ftdevs[port-1].timeout = SysTick_ms + ftdevs[port-1].latency;
-		}
 		break;
 	
 	case VREQ_READ_EEPROM:
@@ -216,11 +168,10 @@ void USB_VendorRequest(USB_SETUP_REQ * pSetup)
 		break;
 	
 	case VREQ_SET_LATENCY_TIMER:
-		ftdevs[port-1].latency = pSetup->wValue + 1;
 		break;
 	
 	case VREQ_GET_LATENCY_TIMER:
-		USBHS_EP0_Buf[0] = ftdevs[port-1].latency;
+		USBHS_EP0_Buf[0] = 16;
 		break;
 	
 	case VREQ_SET_EVENT_CHAR:	

@@ -2,7 +2,7 @@
 #define __USB_TRANSFER_H__
 
 
-void USB_Init(void);
+void USBD_Config(void);
 
 
 #endif

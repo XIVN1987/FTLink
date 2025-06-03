@@ -8,7 +8,7 @@ void SysTick_Config(uint32_t ticks);
 
 int main(void)
 {
-	USB_Init();
+	USBD_Config();
 
 	SysTick_Config(SystemCoreClock / 1000);
 
