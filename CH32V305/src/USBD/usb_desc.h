@@ -35,8 +35,10 @@
 #define USB_SIZE_QUALIFIER_DESC		10
 #define USB_SIZE_STRING_LANGID		4
 #define USB_SIZE_STRING_VENDOR		10
-#define USB_SIZE_STRING_PRODUCT		28
+#define USB_SIZE_STRING_PRODUCT		16
 #define USB_SIZE_STRING_SERIALNBR	26
+#define USB_SIZE_STRING_IFACEJTAG   26
+#define USB_SIZE_STRING_IFACEUART   26
 
 
 #define USB_SIZE_CONFIG_TOTAL	(USB_SIZE_CONFIG_DESC + (USB_SIZE_INTERFACE_DESC + USB_SIZE_ENDPOINT_DESC * 2) * 2)
@@ -49,6 +51,8 @@ extern const uint8_t USB_StringLangID[];
 extern const uint8_t USB_StringVendor[];
 extern const uint8_t USB_StringProduct[];
 extern		 uint8_t USB_StringSerialNbr[];
+extern const uint8_t USB_StringIFaceJTAG[];
+extern const uint8_t USB_StringIFaceUART[];
 extern const uint8_t USB_QualifierDesc[];
 
 

@@ -47,7 +47,7 @@ const uint8_t USB_CfgDesc_FS[] =
 	0xFF,								// bInterfaceClass
 	0xFF,								// bInterfaceSubClass
 	0xFF,								// bInterfaceProtocol
-	0x02,								// iInterface
+	0x04,								// iInterface
 
 	// EP Descriptor
 	USB_SIZE_ENDPOINT_DESC,				// bLength
@@ -74,7 +74,7 @@ const uint8_t USB_CfgDesc_FS[] =
 	0xFF,								// bInterfaceClass
 	0xFF,								// bInterfaceSubClass
 	0xFF,								// bInterfaceProtocol
-	0x02,								// iInterface
+	0x05,								// iInterface
 
 	// ENDPOINT descriptor
 	USB_SIZE_ENDPOINT_DESC,				// bLength
@@ -116,7 +116,7 @@ const uint8_t USB_CfgDesc_HS[] =
 	0xFF,								// bInterfaceClass
 	0xFF,								// bInterfaceSubClass
 	0xFF,								// bInterfaceProtocol
-	0x02,								// iInterface
+	0x04,								// iInterface
 
 	// EP Descriptor
 	USB_SIZE_ENDPOINT_DESC,				// bLength
@@ -145,7 +145,7 @@ const uint8_t USB_CfgDesc_HS[] =
 	0xFF,								// bInterfaceClass
 	0xFF,								// bInterfaceSubClass
 	0xFF,								// bInterfaceProtocol
-	0x02,								// iInterface
+	0x05,								// iInterface
 
 	// ENDPOINT descriptor
 	USB_SIZE_ENDPOINT_DESC,				// bLength
@@ -190,7 +190,7 @@ const uint8_t USB_StringProduct[] =
 {
 	USB_SIZE_STRING_PRODUCT,
 	USB_DESCR_TYP_STRING,
-	'D', 0, 'u', 0, 'a', 0, 'l', 0, ' ', 0, 'R', 0, 'S', 0, '2', 0, '3', 0, '2', 0, '-', 0, 'H', 0, 'S', 0
+	'F', 0, 'T', 0, '2', 0, '2', 0, '3', 0, '2', 0, 'H', 0
 };
 
 
@@ -200,6 +200,24 @@ uint8_t USB_StringSerialNbr[] =
 	USB_SIZE_STRING_SERIALNBR,
 	USB_DESCR_TYP_STRING,
 	'0', 0, '1', 0, '2', 0, '3', 0, '4', 0, '5', 0, '6', 0, '7', 0, '8', 0, '9', 0, 'A', 0, 'B', 0
+};
+
+
+/* Interface Descriptor: JTAG */
+const uint8_t USB_StringIFaceJTAG[] =
+{
+	USB_SIZE_STRING_IFACEJTAG,
+	USB_DESCR_TYP_STRING,
+	'F', 0, 'T', 0, '2', 0, '2', 0, '3', 0, '2', 0, 'H', 0, '-', 0, 'J', 0, 'T', 0, 'A', 0, 'G', 0
+};
+
+
+/* Interface Descriptor: UART */
+const uint8_t USB_StringIFaceUART[] =
+{
+	USB_SIZE_STRING_IFACEUART,
+	USB_DESCR_TYP_STRING,
+	'F', 0, 'T', 0, '2', 0, '2', 0, '3', 0, '2', 0, 'H', 0, '-', 0, 'U', 0, 'A', 0, 'R', 0, 'T', 0
 };
 
 

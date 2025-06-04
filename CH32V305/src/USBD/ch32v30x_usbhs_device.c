@@ -253,6 +253,16 @@ void USBHS_IRQHandler( void )
                         len          = USB_StringSerialNbr[0];
                         break;
 
+                    case 4:
+                        pUSBHS_Descr = USB_StringIFaceJTAG;
+                        len          = USB_StringIFaceJTAG[0];
+                        break;
+                    
+                    case 5:
+                        pUSBHS_Descr = USB_StringIFaceUART;
+                        len          = USB_StringIFaceUART[0];
+                        break;
+
                     default:
                         error = 0xFF;
                         break;
