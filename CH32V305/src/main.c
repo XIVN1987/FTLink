@@ -8,6 +8,8 @@ void SysTick_Config(uint32_t ticks);
 
 int main(void)
 {
+	VCOM_Init();
+
 	USBD_Config();
 
 	SysTick_Config(SystemCoreClock / 1000);
@@ -15,6 +17,8 @@ int main(void)
 	while(1)
 	{
 		JTAG_handle();
+
+		VCOM_TransferData();
 	}
 
 	return 0;

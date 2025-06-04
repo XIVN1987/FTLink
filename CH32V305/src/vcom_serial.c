@@ -12,8 +12,10 @@ volatile VCOM Vcom;
 VCOM_LINE_CODING LineCfg = {115200, 0, 0, 8};   // Baud rate, stop bits, parity bits, data bits
 
 
-#define RXDMA_SZ  (VCP_BULK_IN_SZ_HS * 2)
-uint8_t RXBuffer[RXDMA_SZ] __attribute__((aligned(4)));
+#define RXDMA_SZ                (VCP_BULK_IN_SZ_HS * 4)
+#define VCP_BULK_IN_SZ_HS_M2    (VCP_BULK_IN_SZ_HS - 2)         // 2 bytes are reserved in advance for storing the command header.
+uint8_t RXBufferRsvd[4 + RXDMA_SZ] __attribute__((aligned(4))); // 2 bytes are reserved in advance for storing the command header.
+uint8_t*RXBuffer = RXBufferRsvd + 4;
 uint8_t TXBuffer[VCP_BULK_OUT_SZ_HS] __attribute__((aligned(4)));
 
 
@@ -131,21 +133,21 @@ void VCOM_TransferData(void)
     if(Vcom.in_ready)		// 可以向主机发送数据
     {
         uint32_t pos = RXDMA_SZ - DMA_GetCurrDataCounter(DMA1_Channel3);
-        if((pos - last_pos >= VCP_BULK_IN_SZ_HS) || ((pos != last_pos) && (SysTick_ms != last_ms)))
+        if((pos - last_pos >= VCP_BULK_IN_SZ_HS_M2) || ((pos != last_pos) && (SysTick_ms != last_ms)))
         {
             if(pos < last_pos)
                 pos = RXDMA_SZ;
 
-            if(pos - last_pos > VCP_BULK_IN_SZ_HS)
-                pos = last_pos + VCP_BULK_IN_SZ_HS;
+            if(pos - last_pos > VCP_BULK_IN_SZ_HS_M2)
+                pos = last_pos + VCP_BULK_IN_SZ_HS_M2;
 
             Vcom.in_bytes = pos - last_pos;
 
             Vcom.in_ready = 0;
 
-            USBHSD->UEP3_TX_DMA = (uint32_t)&RXBuffer[last_pos];
-            USBHSD->UEP3_TX_LEN = Vcom.in_bytes;
-            USBHSD->UEP3_TX_CTRL = (USBHSD->UEP3_TX_CTRL & ~USBHS_UEP_T_RES_MASK) | USBHS_UEP_T_RES_ACK;
+            RXBuffer[last_pos-2] = 0x02;
+            RXBuffer[last_pos-1] = 0x61;
+            USBD_TxWrite(VCP_BULK_IN_EP, &RXBuffer[last_pos-2], Vcom.in_bytes+2);
 
             last_pos = pos % RXDMA_SZ;
 
@@ -155,13 +157,18 @@ void VCOM_TransferData(void)
         {
             /* Prepare a zero packet if previous packet size is VCP_BULK_IN_SZ and
                no more data to send at this moment to note Host the transfer has been done */
-            if(Vcom.in_bytes == VCP_BULK_IN_SZ_HS)
+            if(Vcom.in_bytes == VCP_BULK_IN_SZ_HS_M2)
 			{
 				Vcom.in_bytes = 0;
 				
-				USBHSD->UEP3_TX_LEN = 0;
-				USBHSD->UEP3_TX_CTRL = (USBHSD->UEP3_TX_CTRL & ~USBHS_UEP_T_RES_MASK) | USBHS_UEP_T_RES_ACK;
+                USBD_TxWrite(VCP_BULK_IN_EP, RXBuffer, 0);
 			}
+            else
+            {
+                RXBuffer[-2] = 0x02;
+                RXBuffer[-1] = 0x60;
+                USBD_TxWrite(VCP_BULK_IN_EP, &RXBuffer[-2], 2);
+            }
         }
     }
 
@@ -171,13 +178,13 @@ xfer_out:
     {
         Vcom.out_ready = 0;
 
-        memcpy(TXBuffer, USBHS_EP3_Rx_Buf, Vcom.out_bytes);
+        memcpy(TXBuffer, USBHS_EP4_Rx_Buf, Vcom.out_bytes);
 
         DMA_Cmd(DMA1_Channel2, DISABLE);
         DMA_SetCurrDataCounter(DMA1_Channel2, Vcom.out_bytes);
         DMA_Cmd(DMA1_Channel2, ENABLE);
 
         /* Ready for next BULK OUT */
-        USBHSD->UEP3_RX_CTRL = (USBHSD->UEP3_RX_CTRL & ~USBHS_UEP_R_RES_MASK) | USBHS_UEP_R_RES_ACK;
+        USBD_RxReady(VCP_BULK_OUT_EP);
     }
 }

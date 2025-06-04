@@ -101,7 +101,6 @@ static const uint16_t ftdi_eeprom_info[] =
 };
 
 
-extern uint8_t USBHS_EP0_Buf[];
 extern void JTAG_setup(void);
 extern void JTAG_exit(void);
 
@@ -151,7 +150,7 @@ void USB_VendorRequest(USB_SETUP_REQ * pSetup)
 	case VREQ_SET_BAUDRATE:
 		if(port==2)
 		{
-			LineCfg.u32DTERate = pSetup->wValue;
+			LineCfg.u32DTERate = 3000000 / (pSetup->wValue & 0x3FFF);
 			VCOM_LineCoding(&LineCfg);
 		}
 		break;

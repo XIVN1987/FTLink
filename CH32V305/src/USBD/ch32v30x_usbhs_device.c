@@ -27,10 +27,6 @@ volatile uint8_t USBHS_DevSpeed;
 volatile uint8_t USBHS_DevConfig;
 volatile uint8_t USBHS_DevEnumStatus;
 
-/* HID Class Command */
-volatile uint8_t USBHS_HID_Idle;
-volatile uint8_t USBHS_HID_Protocol;
-
 
 /* Endpoint Buffer */
 uint8_t USBHS_EP0_Buf[USB_MAX_EP0_SZ]        __attribute__((aligned(4)));
@@ -38,7 +34,6 @@ uint8_t USBHS_EP1_Tx_Buf[USB_BULK_IN_SZ_HS]  __attribute__((aligned(4)));
 uint8_t USBHS_EP2_Rx_Buf[USB_BULK_OUT_SZ_HS] __attribute__((aligned(4)));
 uint8_t USBHS_EP3_Tx_Buf[VCP_BULK_IN_SZ_HS]  __attribute__((aligned(4)));
 uint8_t USBHS_EP4_Rx_Buf[VCP_BULK_OUT_SZ_HS] __attribute__((aligned(4)));
-
 
 
 /*********************************************************************
@@ -61,7 +56,6 @@ void USBHS_RCC_Init(void)
 }
 
 
-extern volatile VCOM Vcom;
 /*********************************************************************
  * @fn      USBHS_Device_Endp_Init
  *
@@ -97,8 +91,6 @@ void USBHS_Device_Endp_Init(void)
     USBHSD->UEP3_TX_CTRL = USBHS_UEP_T_RES_NAK;
 
     USBHSD->UEP4_RX_CTRL = USBHS_UEP_R_RES_ACK;
-
-    Vcom.in_ready = 1;
 }
 
 
@@ -162,6 +154,7 @@ void USBD_TxWrite(uint32_t ep, uint8_t * data, uint32_t size)
 }
 
 
+extern volatile VCOM Vcom;
 /*********************************************************************
  * @fn      USBHS_IRQHandler
  *
@@ -301,6 +294,8 @@ void USBHS_IRQHandler( void )
             case USB_SET_CONFIGURATION:
                 USBHS_DevConfig = USBHS_Setup.wValue & 0xFF;
                 USBHS_DevEnumStatus = 1;
+                
+                Vcom.in_ready = 1;
                 break;
 
             case USB_GET_INTERFACE:     // AltSetting Select
@@ -323,7 +318,7 @@ void USBHS_IRQHandler( void )
                             break;
 
                         case USB_BULK_OUT_EP:
-                            USBHSD->UEP1_RX_CTRL = USBHS_UEP_R_RES_ACK;
+                            USBHSD->UEP2_RX_CTRL = USBHS_UEP_R_RES_ACK;
                             break;
 
                         case VCP_BULK_IN_EP:
@@ -331,7 +326,7 @@ void USBHS_IRQHandler( void )
                             break;
 
                         case VCP_BULK_OUT_EP:
-                            USBHSD->UEP3_RX_CTRL = USBHS_UEP_R_RES_ACK;
+                            USBHSD->UEP4_RX_CTRL = USBHS_UEP_R_RES_ACK;
                             break;
 
                         default:
@@ -354,7 +349,7 @@ void USBHS_IRQHandler( void )
                             break;
 
                         case USB_BULK_OUT_EP:
-                            USBHSD->UEP1_RX_CTRL = (USBHSD->UEP1_RX_CTRL & ~USBHS_UEP_R_RES_MASK) | USBHS_UEP_R_RES_STALL;
+                            USBHSD->UEP2_RX_CTRL = (USBHSD->UEP2_RX_CTRL & ~USBHS_UEP_R_RES_MASK) | USBHS_UEP_R_RES_STALL;
                             break;
 
                         case VCP_BULK_IN_EP:
@@ -362,7 +357,7 @@ void USBHS_IRQHandler( void )
                             break;
 
                         case VCP_BULK_OUT_EP:
-                            USBHSD->UEP3_RX_CTRL = (USBHSD->UEP3_RX_CTRL & ~USBHS_UEP_R_RES_MASK) | USBHS_UEP_R_RES_STALL;
+                            USBHSD->UEP4_RX_CTRL = (USBHSD->UEP4_RX_CTRL & ~USBHS_UEP_R_RES_MASK) | USBHS_UEP_R_RES_STALL;
                             break;
 
                         default:
@@ -385,7 +380,7 @@ void USBHS_IRQHandler( void )
                         break;
 
                     case USB_BULK_OUT_EP:
-                        USBHS_EP0_Buf[0] = (USBHSD->UEP1_RX_CTRL & USBHS_UEP_R_RES_MASK) == USBHS_UEP_R_RES_STALL ? 0x01 : 0x00;
+                        USBHS_EP0_Buf[0] = (USBHSD->UEP2_RX_CTRL & USBHS_UEP_R_RES_MASK) == USBHS_UEP_R_RES_STALL ? 0x01 : 0x00;
                         break;
 
                     case VCP_BULK_IN_EP:
@@ -393,7 +388,7 @@ void USBHS_IRQHandler( void )
                         break;
 
                     case VCP_BULK_OUT_EP:
-                        USBHS_EP0_Buf[0] = (USBHSD->UEP3_RX_CTRL & USBHS_UEP_R_RES_MASK) == USBHS_UEP_R_RES_STALL ? 0x01 : 0x00;
+                        USBHS_EP0_Buf[0] = (USBHSD->UEP4_RX_CTRL & USBHS_UEP_R_RES_MASK) == USBHS_UEP_R_RES_STALL ? 0x01 : 0x00;
                         break;
 
                     default:
@@ -416,12 +411,7 @@ void USBHS_IRQHandler( void )
             /* usb non-standard request processing */
             if(USBHS_Setup.bRequestType & USB_REQ_TYP_CLASS)
             {
-                switch(USBHS_Setup.bRequest)
-                {
-                default:
-                    error = 0xFF;
-                    break;
-                }
+                error = 0xFF;
             }
             else if(USBHS_Setup.bRequestType & USB_REQ_TYP_VENDOR)
             {

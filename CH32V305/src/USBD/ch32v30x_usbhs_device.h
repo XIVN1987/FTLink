@@ -12,11 +12,11 @@
 #define USB_EPT_INTERRUPT   0x03
 
 
+extern uint8_t USBHS_EP0_Buf[];
 extern uint8_t USBHS_EP1_Tx_Buf[];
-extern uint8_t USBHS_EP1_Rx_Buf[];
-extern uint8_t USBHS_EP2_Tx_Buf[];
+extern uint8_t USBHS_EP2_Rx_Buf[];
 extern uint8_t USBHS_EP3_Tx_Buf[];
-extern uint8_t USBHS_EP3_Rx_Buf[];
+extern uint8_t USBHS_EP4_Rx_Buf[];
 
 
 extern void USBHS_RCC_Init(void);
