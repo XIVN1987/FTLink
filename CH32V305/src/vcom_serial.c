@@ -130,10 +130,10 @@ void VCOM_TransferData(void)
     static uint32_t last_ms = 0;
     static uint32_t last_pos = 0;
 
-    if(Vcom.in_ready)		// 可以向主机发送数据
+    if((USBHSD->UEP3_TX_CTRL & USBHS_UEP_T_RES_MASK) == USBHS_UEP_T_RES_NAK)    // 可以向主机发送数据
     {
         uint32_t pos = RXDMA_SZ - DMA_GetCurrDataCounter(DMA1_Channel3);
-        if((pos - last_pos >= VCP_BULK_IN_SZ_HS_M2) || ((pos != last_pos) && (SysTick_ms != last_ms)))
+        if((pos - last_pos >= VCP_BULK_IN_SZ_HS_M2) || (SysTick_ms != last_ms))
         {
             if(pos < last_pos)
                 pos = RXDMA_SZ;
@@ -143,10 +143,8 @@ void VCOM_TransferData(void)
 
             Vcom.in_bytes = pos - last_pos;
 
-            Vcom.in_ready = 0;
-
             RXBuffer[last_pos-2] = 0x02;
-            RXBuffer[last_pos-1] = 0x61;
+            RXBuffer[last_pos-1] = Vcom.in_bytes ? 0x61 : 0x60;
             USBD_TxWrite(VCP_BULK_IN_EP, &RXBuffer[last_pos-2], Vcom.in_bytes+2);
 
             last_pos = pos % RXDMA_SZ;
@@ -163,26 +161,20 @@ void VCOM_TransferData(void)
 				
                 USBD_TxWrite(VCP_BULK_IN_EP, RXBuffer, 0);
 			}
-            else
-            {
-                RXBuffer[-2] = 0x02;
-                RXBuffer[-1] = 0x60;
-                USBD_TxWrite(VCP_BULK_IN_EP, &RXBuffer[-2], 2);
-            }
         }
     }
 
 xfer_out:
 	/* 从主机接收到数据，且前面的数据 DMA 已发送完 */
-    if(Vcom.out_ready && (DMA_GetCurrDataCounter(DMA1_Channel2) == 0))
+    if(Vcom.out_bytes && (DMA_GetCurrDataCounter(DMA1_Channel2) == 0))
     {
-        Vcom.out_ready = 0;
-
         memcpy(TXBuffer, USBHS_EP4_Rx_Buf, Vcom.out_bytes);
 
         DMA_Cmd(DMA1_Channel2, DISABLE);
         DMA_SetCurrDataCounter(DMA1_Channel2, Vcom.out_bytes);
         DMA_Cmd(DMA1_Channel2, ENABLE);
+
+        Vcom.out_bytes = 0;
 
         /* Ready for next BULK OUT */
         USBD_RxReady(VCP_BULK_OUT_EP);

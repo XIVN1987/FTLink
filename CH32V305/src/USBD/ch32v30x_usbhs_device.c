@@ -294,8 +294,6 @@ void USBHS_IRQHandler( void )
             case USB_SET_CONFIGURATION:
                 USBHS_DevConfig = USBHS_Setup.wValue & 0xFF;
                 USBHS_DevEnumStatus = 1;
-                
-                Vcom.in_ready = 1;
                 break;
 
             case USB_GET_INTERFACE:     // AltSetting Select
@@ -521,8 +519,6 @@ void USBHS_IRQHandler( void )
             case VCP_BULK_IN_EP & 0x0F:
                 USBHSD->UEP3_TX_CTRL = (USBHSD->UEP3_TX_CTRL & ~USBHS_UEP_T_RES_MASK) | USBHS_UEP_T_RES_NAK;
                 USBHSD->UEP3_TX_CTRL ^= USBHS_UEP_T_TOG_DATA1;
-
-                Vcom.in_ready = 1;
                 break;
 
             default:
@@ -576,7 +572,6 @@ void USBHS_IRQHandler( void )
                 USBHSD->UEP4_RX_CTRL = (USBHSD->UEP4_RX_CTRL & ~USBHS_UEP_R_RES_MASK) | USBHS_UEP_R_RES_NAK;
 
                 Vcom.out_bytes = len;
-                Vcom.out_ready = 1;
                 break;
 
             default:
