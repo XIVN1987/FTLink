@@ -65,7 +65,7 @@ extern void JTAG_write(int byte);
 extern void JTAG_flush_resp(void);
 int JTAG_execute(uint8_t *req, int req_size)
 {
-	uint32_t (*jtag_xfer_func)(uint32_t data, uint32_t nbit, uint32_t delay) = 0;
+	static uint32_t (*jtag_xfer_func)(uint32_t data, uint32_t nbit, uint32_t delay) = 0;
 	int rp = 0;
 
 	while(rp<req_size){
